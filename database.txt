@@ -1,0 +1,114 @@
+-- Create the database
+CREATE DATABASE IF NOT EXISTS gps_face_db;
+USE gps_face_db;
+
+-- Create the users table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    face_image LONGBLOB,
+    position VARCHAR(100) DEFAULT 'Employee',
+    is_admin BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the attendance table
+CREATE TABLE attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    login_time DATETIME,
+    logout_time DATETIME,
+    login_photo_path VARCHAR(255),
+    logout_photo_path VARCHAR(255),
+    login_latitude FLOAT,
+    login_longitude FLOAT,
+    logout_latitude FLOAT,
+    logout_longitude FLOAT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create the rota table
+CREATE TABLE rota (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rota_image LONGBLOB,  -- Changed from 'image' to 'rota_image' for clarity and consistency
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the notifications table
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT 0,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+==========================================================================================
+-- Create the database
+CREATE DATABASE IF NOT EXISTS gps_face_db;
+USE gps_face_db;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    face_image LONGBLOB,
+    position VARCHAR(100) DEFAULT 'Employee',
+    is_admin BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Attendance table
+CREATE TABLE IF NOT EXISTS attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    login_time DATETIME,
+    logout_time DATETIME,
+    login_photo_path VARCHAR(255),
+    logout_photo_path VARCHAR(255),
+    login_latitude FLOAT,
+    login_longitude FLOAT,
+    logout_latitude FLOAT,
+    logout_longitude FLOAT,
+    daily_status_submitted BOOLEAN DEFAULT 0,
+    admin_verified BOOLEAN DEFAULT 0,
+    attendance_status ENUM('Present', 'Absent') DEFAULT 'Absent',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Rota table
+CREATE TABLE IF NOT EXISTS rota (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rota_image LONGBLOB,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT 0,
+    mark_done BOOLEAN DEFAULT 0,
+    mark_done_at TIMESTAMP NULL,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Daily Updates table
+CREATE TABLE IF NOT EXISTS daily_updates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    update_message TEXT,
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT 0,
+    verification_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    verified_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
