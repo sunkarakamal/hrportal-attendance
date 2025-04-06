@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Attendance System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        body {
+            background: #f4f7fa;
+            color: #333;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: #1e3a8a;
+            color: #fff;
+            padding: 20px;
+            position: fixed;
+            height: 100%;
+            transition: width 0.3s ease;
+            overflow-y: auto;
+        }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .sidebar-header h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+        .profile-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .profile-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 15px;
+            border: 2px solid #fff;
+        }
+        .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-info p {
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+        .profile-info input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            display: none;
+        }
+        .profile-info input.active {
+            display: block;
+        }
+        .profile-info button {
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .profile-info button:hover {
+            background: #059669;
+        }
+        #edit-profile-btn {
+            background: #f59e0b;
+        }
+        #edit-profile-btn:hover {
+            background: #d97706;
+        }
+        #save-profile-btn {
+            display: none;
+        }
+        .sidebar-nav {
+            list-style: none;
+        }
+        .sidebar-nav li {
+            margin: 10px 0;
+        }
+        .sidebar-nav li a {
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .sidebar-nav li a i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-nav li a:hover,
+        .sidebar-nav li.active a {
+            background: #3b82f6;
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+            background: #fff;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.collapsed {
+            margin-left: 80px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+        .toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e3a8a;
+            cursor: pointer;
+        }
+        .flash-messages p {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            font-size: 1.4rem;
+            color: #1e3a8a;
+            margin-bottom: 15px;
+        }
+        .attendance-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        #video {
+            width: 100%;
+            max-width:350px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .attendance-form textarea {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .attendance-form button {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            max-width: 200px;
+        }
+        .attendance-form button:hover {
+            background: #1e3a8a;
+        }
+        .attendance-form button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .calendar div {
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .calendar .day {
+            background: #e5e7eb;
+        }
+        .calendar .present {
+            background: #10b981;
+            color: #fff;
+        }
+        .calendar .absent {
+            background: #ef4444;
+            color: #fff;
+        }
+        .calendar .header {
+            background: #3b82f6;
+            color: #fff;
+            font-weight: 500;
+        }
+        .rota-image {
+            width: 100%;
+            max-width: 700px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .list-group {
+            list-style: none;
+        }
+        .list-group li {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+        .leave-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .leave-form input,
+        .leave-form select {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            width: 100%;
+        }
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+            .main-content.collapsed {
+                margin-left: 80px;
+            }
+            .calendar {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 15px;
+            }
+            .sidebar.collapsed {
+                width: 100%;
+                height: 60px;
+                overflow: hidden;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+            .sidebar-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .sidebar-nav li {
+                flex: 1 1 auto;
+            }
+            .sidebar-nav li a {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .calendar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            #video {
+                max-width: 300px;
+            }
+        }
+        @media (max-width: 480px) {
+            .sidebar-header h2 {
+                font-size: 1.2rem;
+            }
+            .profile-circle {
+                width: 50px;
+                height: 50px;
+            }
+            .profile-info p {
+                font-size: 0.8rem;
+            }
+            .sidebar-nav li a {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+            .sidebar-nav li a i {
+                margin-right: 10px;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            .card {
+                padding: 15px;
+            }
+            .calendar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            #video {
+                max-width: 250px;
+            }
+            .attendance-form textarea {
+                max-width: 300px;
+            }
+            .attendance-form button {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>User Dashboard</h2>
+            </div>
+            <div class="profile-section">
+                {% if user_face_image_base64 %}
+                <div class="profile-circle">
+                    <img id="profile-pic" src="data:image/jpeg;base64,{{ user_face_image_base64 }}" alt="User Profile">
+                </div>
+                {% else %}
+                <div class="profile-circle">
+                    <img id="profile-pic" src="{{ url_for('static', filename='default_profile.jpg') }}" alt="User Profile">
+                </div>
+                {% endif %}
+                <div class="profile-info">
+                    <p><strong>Email:</strong> <span id="email-display">{{ user_email }}</span></p>
+                    <input type="email" id="email" value="{{ user_email }}" placeholder="Email">
+                    <p><strong>Position:</strong> {{ user_position }}</p>
+                    <input type="text" id="position" value="{{ user_position }}" placeholder="Position">
+                    <p><strong>Joined:</strong> {{ created_at|strftime('%Y-%m-%d') }}</p>
+                    <input type="file" id="new-face-image" accept="image/*" style="display: none;">
+                    <button id="edit-profile-btn">Edit Profile</button>
+                    <button id="save-profile-btn">Save Changes</button>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="active" data-section="attendance"><a><i class="fas fa-clock"></i> <span class="sidebar-text">Attendance</span></a></li>
+                <li data-section="weekly-rota"><a><i class="fas fa-calendar-week"></i> <span class="sidebar-text">Weekly Rota</span></a></li>
+                <li data-section="holidays"><a><i class="fas fa-calendar-alt"></i> <span class="sidebar-text">Holidays</span></a></li>
+                <li data-section="policies"><a><i class="fas fa-file-alt"></i> <span class="sidebar-text">Policies</span></a></li>
+                <li data-section="mailbox"><a><i class="fas fa-envelope"></i> <span class="sidebar-text">My Mailbox</span></a></li>
+                <li data-section="leaves"><a><i class="fas fa-umbrella-beach"></i> <span class="sidebar-text">Leaves</span></a></li>
+                <li data-section="notifications"><a><i class="fas fa-bell"></i> <span class="sidebar-text">Notifications</span></a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span></a></li>
+            </ul>
+        </nav>
+        <main class="main-content">
+            <div class="header">
+                <h1>Welcome, {{ session.username }}</h1>
+                <button class="toggle-btn"><i class="fas fa-bars"></i></button>
+            </div>
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <p class="{{ category }}">{{ message }}</p>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <section class="content-section active" id="attendance">
+                <div class="card">
+                    <h3>Attendance</h3>
+                    <p><strong>Last Login:</strong> {{ last_login|strftime('%Y-%m-%d %H:%M:%S') if last_login else 'N/A' }}</p>
+                    <p><strong>Last Logout:</strong> {{ last_logout|strftime('%Y-%m-%d %H:%M:%S') if last_logout else 'N/A' }}</p>
+                    <div class="attendance-form">
+                        {% if can_login %}
+                            <video id="video" autoplay></video>
+                            <button id="start-camera-btn">Start Camera</button>
+                            <button id="stop-camera-btn" style="display: none;">Stop Camera</button>
+                            <button id="capture-login-btn" style="display: none;">Capture Login</button>
+                        {% elif not daily_status_submitted %}
+                            <textarea id="daily-status" placeholder="Enter your daily status report" required></textarea>
+                            <button id="submit-status-btn">Submit Daily Status</button>
+                        {% elif not attendance_submitted %}
+                            <p>Daily status submitted. Please capture your logout photo.</p>
+                            <video id="video" autoplay></video>
+                            <button id="start-camera-btn">Start Camera</button>
+                            <button id="stop-camera-btn" style="display: none;">Stop Camera</button>
+                            <button id="capture-logout-btn" style="display: none;">Capture Logout</button>
+                        {% else %}
+                            <p>You have already submitted your attendance for today.</p>
+                        {% endif %}
+                    </div>
+                    <h3>30-Day Attendance Calendar</h3>
+                    <div class="calendar">
+                        <div class="header">Mon</div>
+                        <div class="header">Tue</div>
+                        <div class="header">Wed</div>
+                        <div class="header">Thu</div>
+                        <div class="header">Fri</div>
+                        <div class="header">Sat</div>
+                        <div class="header">Sun</div>
+                        {% for record in attendance_records %}
+                            <div class="day {{ 'present' if record.present else 'absent' }}">{{ record.date.day }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-section" id="weekly-rota">
+                <div class="card">
+                    <h3>Weekly Rota</h3>
+                    {% if rota_image_base64 %}
+                        <img src="data:image/jpeg;base64,{{ rota_image_base64 }}" alt="Weekly Rota" class="rota-image">
+                    {% else %}
+                        <p>No weekly rota available.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="content-section" id="holidays">
+                <div class="card">
+                    <h3>Holidays List</h3>
+                    <ul class="list-group">
+                        <li>January 14 - Pongal</li>
+                        <li>January 26 - Republic Day</li>
+                        <li>February 26 - Mahasivaratri</li>
+                        <li>March 14 - Holi</li>
+                        <li>March 31 - Ramzan ID/Eid</li>
+                        <li>May 01 - Labour Day</li>
+                        <li>August 15 - Independence Day</li>
+                        <li>August 27 - Ganesh Chaturdhi</li>
+                        <li>October 02 - Gandhi Jayanthi</li>
+                        <li>October 20 - Diwali</li>
+                        <li>October 21 - Diwali</li>
+                        <li>December 25 - Christmas</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="content-section" id="policies">
+                <div class="card">
+                    <h3>Company Policies</h3>
+                    <ul class="list-group">
+                        <li>Attendance Policy: Employees must log in by 9 AM.</li>
+                        <h2>Shifts</h2>
+                        <li>1. Morning Shift</li>
+                        <li>2. General Shift</li>
+                        <li>3. Second Shift</li>
+                        <li>4. Night Shift</li>
+                        <li>Leave Policy: 15 days annual leave allowed.</li>
+                        <li>Remote Work: Allowed with prior approval.</li>
+                        <br>
+                        <h2>Dress Code Policy</h2>
+                        <li>1. Business casual attire is expected in the office at all times.</li>
+                        <li>2. No Jeans, T-Shirts, Hoodies, or Shorts are allowed.</li>
+                        <li>3. Shoes should be closed-toe in design and appropriate for the office environment.</li>
+                        <li>4. No visible tattoos or piercings are allowed.</li>
+                        <li>5. English is the mandatory language of communication at our office.</li>
+                        <br>
+                        <h2 style="color:red">**Failure to comply may result in disciplinary action.**</h2>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="content-section" id="mailbox">
+                <div class="card">
+                    <h3>My Mailbox</h3>
+                    <ul class="list-group">
+                        <li>Subject: Welcome Email - Date: {{ created_at|strftime('%Y-%m-%d') }}</li>
+                        <li>Subject: Policy Update - Date: 2025-03-01</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="content-section" id="leaves">
+                <div class="card">
+                    <h3>Leave Management</h3>
+                    <div class="leave-form">
+                        <input type="date" id="leave-start" required>
+                        <input type="date" id="leave-end" required>
+                        <select id="leave-type">
+                            <option value="sick">Sick Leave</option>
+                            <option value="vacation">Vacation</option>
+                            <option value="personal">Personal Leave</option>
+                        </select>
+                        <button id="submit-leave-btn">Submit Leave Request</button>
+                    </div>
+                    <h3>Leave History</h3>
+                    <ul class="list-group">
+                        <li>Sick Leave: 2025-02-01 to 2025-02-03 - Approved</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="content-section" id="notifications">
+                <div class="card">
+                    <h3>Notifications</h3>
+                    {% if notifications %}
+                        <ul class="list-group">
+                            {% for notification in notifications %}
+                                <li>{{ notification.message }} - {{ notification.created_at|strftime('%Y-%m-%d %H:%M:%S') }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No notifications available.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const navItems = document.querySelectorAll('.sidebar li[data-section]');
+            const sections = document.querySelectorAll('.content-section');
+            let stream = null;
+
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('collapsed');
+            });
+
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionId = item.getAttribute('data-section');
+                    if (sectionId) {
+                        navItems.forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        sections.forEach(section => section.classList.remove('active'));
+                        document.getElementById(sectionId).classList.add('active');
+                    }
+                });
+            });
+
+            // Profile Edit
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const emailInput = document.getElementById('email');
+            const positionInput = document.getElementById('position');
+            const newFaceImageInput = document.getElementById('new-face-image');
+            const profilePic = document.getElementById('profile-pic');
+            const emailDisplay = document.getElementById('email-display');
+
+            editProfileBtn.addEventListener('click', () => {
+                emailInput.classList.add('active');
+                positionInput.classList.add('active');
+                newFaceImageInput.style.display = 'block';
+                emailDisplay.style.display = 'none';
+                editProfileBtn.style.display = 'none';
+                saveProfileBtn.style.display = 'block';
+            });
+
+            newFaceImageInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    profilePic.src = URL.createObjectURL(file);
+                }
+            });
+
+            saveProfileBtn.addEventListener('click', () => {
+                const formData = new FormData();
+                formData.append('email', emailInput.value);
+                formData.append('position', positionInput.value);
+                if (newFaceImageInput.files[0]) {
+                    formData.append('face_image', newFaceImageInput.files[0]);
+                }
+                fetch('/update_profile', { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Profile updated successfully!');
+                            emailDisplay.textContent = emailInput.value;
+                            emailInput.classList.remove('active');
+                            positionInput.classList.remove('active');
+                            newFaceImageInput.style.display = 'none';
+                            emailDisplay.style.display = 'inline';
+                            editProfileBtn.style.display = 'block';
+                            saveProfileBtn.style.display = 'none';
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    });
+            });
+
+            // Camera Functionality
+            const video = document.getElementById('video');
+            const startCameraBtn = document.getElementById('start-camera-btn');
+            const stopCameraBtn = document.getElementById('stop-camera-btn');
+            const captureLoginBtn = document.getElementById('capture-login-btn');
+            const captureLogoutBtn = document.getElementById('capture-logout-btn');
+            const submitStatusBtn = document.getElementById('submit-status-btn');
+            const canvas = document.createElement('canvas');
+
+            function startCamera() {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(s => {
+                        stream = s;
+                        video.srcObject = stream;
+                        startCameraBtn.style.display = 'none';
+                        stopCameraBtn.style.display = 'block';
+                        if (captureLoginBtn) captureLoginBtn.style.display = 'block';
+                        if (captureLogoutBtn) captureLogoutBtn.style.display = 'block';
+                    })
+                    .catch(err => alert('Error accessing camera: ' + err.message));
+            }
+
+            if (startCameraBtn) {
+                startCameraBtn.addEventListener('click', startCamera);
+            }
+
+            if (stopCameraBtn) {
+                stopCameraBtn.addEventListener('click', () => {
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                        video.srcObject = null;
+                        startCameraBtn.style.display = 'block';
+                        stopCameraBtn.style.display = 'none';
+                        if (captureLoginBtn) captureLoginBtn.style.display = 'none';
+                        if (captureLogoutBtn) captureLogoutBtn.style.display = 'none';
+                    }
+                });
+            }
+
+            if (captureLoginBtn) {
+                captureLoginBtn.addEventListener('click', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    canvas.toBlob(blob => {
+                        const formData = new FormData();
+                        formData.append('face_image', blob, 'capture.jpg');
+                        fetch('/login_photo', { method: 'POST', body: formData })
+                            .then(response => response.json())
+                            .then(data => {
+                                stopCameraBtn.click();
+                                if (data.success) {
+                                    const loginTime = new Date().toLocaleString();
+                                    alert(`Login Successful! Time: ${loginTime}\nAttendance Submitted`);
+                                    location.reload();
+                                } else {
+                                    alert(data.message);
+                                }
+                            });
+                    }, 'image/jpeg');
+                });
+            }
+
+            if (submitStatusBtn) {
+                submitStatusBtn.addEventListener('click', () => {
+                    const dailyStatus = document.getElementById('daily-status').value;
+                    if (!dailyStatus) {
+                        alert('Please enter your daily status report.');
+                        return;
+                    }
+                    fetch('/submit_daily_status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `daily_status=${encodeURIComponent(dailyStatus)}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Daily status submitted successfully!');
+                                location.reload();
+                            } else {
+                                alert(data.message);
+                            }
+                        });
+                });
+            }
+
+            if (captureLogoutBtn) {
+                captureLogoutBtn.addEventListener('click', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    canvas.toBlob(blob => {
+                        const formData = new FormData();
+                        formData.append('face_image', blob, 'capture.jpg');
+                        fetch('/logout_photo', { method: 'POST', body: formData })
+                            .then(response => response.json())
+                            .then(data => {
+                                stopCameraBtn.click();
+                                if (data.success) {
+                                    const logoutTime = new Date().toLocaleString();
+                                    alert(`Logout Successful! Time: ${logoutTime}\nAttendance Submitted`);
+                                    location.reload();
+                                } else {
+                                    alert(data.message);
+                                }
+                            });
+                    }, 'image/jpeg');
+                });
+            }
+
+            // Leave Request
+            const submitLeaveBtn = document.getElementById('submit-leave-btn');
+            submitLeaveBtn.addEventListener('click', () => {
+                const startDate = document.getElementById('leave-start').value;
+                const endDate = document.getElementById('leave-end').value;
+                const leaveType = document.getElementById('leave-type').value;
+                alert(`Leave Request Submitted!\nStart: ${startDate}\nEnd: ${endDate}\nType: ${leaveType}`);
+            });
+
+            // Notification Polling
+            function checkNotifications() {
+                fetch('/check_notifications')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.message) {
+                            alert(`New Notification: ${data.message}`);
+                            location.reload();
+                        }
+                    });
+            }
+            setInterval(checkNotifications, 30000);
+            checkNotifications();
+        });
+    </script>
+</body>
+</html>
