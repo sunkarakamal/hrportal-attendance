@@ -15,15 +15,15 @@ import random
 import base64
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = "Jhaishna123"
 
 # MySQL Connection Pooling
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "root",  # Replace with your actual MySQL password
+    "password": "jhaishna",  # Replace with your actual MySQL password
     "database": "gps_face_db",
-    "port": 3308,  # Set to 3306 or 3308 based on your MySQL configuration
+    "port": 3306,  # Set to 3306 or 3308 based on your MySQL configuration
     "pool_name": "mypool",
     "pool_size": 5
 }
@@ -32,11 +32,15 @@ try:
     connection_pool = mysql.connector.pooling.MySQLConnectionPool(**db_config)
 except Error as err:
     print(f"Error creating connection pool: {err}")
+    connection_pool = None
 
 def get_db_connection():
     try:
-        return connection_pool.get_connection()
-    except Error as err:
+        if connection_pool:
+            return connection_pool.get_connection()
+        else:
+            raise Exception("Connection pool is not initialized.")
+    except Exception as err:
         print(f"Database connection failed: {err}")
         flash(f"Database connection failed: {err}", "error")
         return None
@@ -132,6 +136,8 @@ def login():
 
         conn = get_db_connection()
         if not conn:
+            flash("Database connection failed", "error")
+            print("❌ Failed to get DB connection")
             return render_template('login.html')
         try:
             cursor = conn.cursor(dictionary=True)
@@ -167,7 +173,7 @@ def register():
         conn = get_db_connection()
         if not conn:
             return render_template('register.html')
-        
+
         try:
             cursor = conn.cursor()
             hashed_password = generate_password_hash(password)
@@ -260,8 +266,9 @@ def reset_password():
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session or session.get('is_admin'):
+    if 'user_id' not in session or session.get('is_admin', False) is True:
         flash("Access denied", "error")
+        print("🔐 Session after login:", dict(session))
         return redirect(url_for('login'))
 
     conn = get_db_connection()
@@ -313,21 +320,22 @@ def dashboard():
         user_face_image_base64 = base64.b64encode(user['face_image']).decode('utf-8') if user['face_image'] else None
 
         return render_template('dashboard.html',
-                              user_email=user['email'],
-                              user_face_image_base64=user_face_image_base64,
-                              user_position=user['position'],
-                              created_at=user['created_at'],
-                              last_login=last_attendance['login_time'] if last_attendance else None,
-                              last_logout=last_attendance['logout_time'] if last_attendance else None,
-                              can_login=can_login,
-                              daily_status_submitted=daily_status_submitted,
-                              attendance_submitted=attendance_submitted,
-                              attendance_records=attendance_records,
-                              notifications=notifications,
-                              rota_image_base64=rota_image_base64)
+                               user_email=user['email'],
+                               user_face_image_base64=user_face_image_base64,
+                               user_position=user['position'],
+                               created_at=user['created_at'],
+                               last_login=last_attendance['login_time'] if last_attendance else None,
+                               last_logout=last_attendance['logout_time'] if last_attendance else None,
+                               can_login=can_login,
+                               daily_status_submitted=daily_status_submitted,
+                               attendance_submitted=attendance_submitted,
+                               attendance_records=attendance_records,
+                               notifications=notifications,
+                               rota_image_base64=rota_image_base64)
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/login_photo', methods=['POST'])
 def login_photo():
@@ -581,7 +589,7 @@ def send_notification():
         users = cursor.fetchall()
         if not users:
             return jsonify({"success": False, "message": "No non-admin users found"})
-        
+
         for user in users:
             cursor.execute("INSERT INTO notifications (message, user_id) VALUES (%s, %s)", (message, user['id']))
         conn.commit()
@@ -743,7 +751,7 @@ def admin():
         """)
         read_notifications = cursor.fetchall()
 
-        return render_template('admin.html', data=data, view=view, admin_profile=admin_profile, users=users, all_attendance=all_attendance, 
+        return render_template('admin.html', data=data, view=view, admin_profile=admin_profile, users=users, all_attendance=all_attendance,
                               search_query=search_query, rota_image_base64=rota_image_base64, read_notifications=read_notifications)
     finally:
         cursor.close()
@@ -833,4 +841,4 @@ if __name__ == '__main__':
     uploads_dir = os.path.join(app.static_folder, 'uploads')
     os.makedirs(uploads_dir, exist_ok=True)
     init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
