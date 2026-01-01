@@ -1,13 +1,5 @@
 name: CI/CD — Build → ECR → ECS (Fargate)
 
-on:
-  workflow_dispatch:
-    inputs:
-      deploy:
-        description: "confirmation to deploy"
-        required: true
-        default: "yes"
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
