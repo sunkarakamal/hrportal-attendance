@@ -24,17 +24,33 @@ echo "Installing build and Python dependencies (may prompt for password)..."
 if [ "$PKG_MANAGER" = "apt" ]; then
   sudo apt-get install -y git python3 python3-venv python3-dev python3-pip build-essential cmake libssl-dev libbz2-dev libffi-dev
 else
-  sudo $PKG_MANAGER install -y git python3 python3-devel python3-venv python3-pip gcc gcc-c++ make cmake openssl-devel bzip2-devel libffi-devel
+  # On Amazon Linux / RHEL based systems the package name 'python3-venv' may not exist.
+  # Install python3, development headers and pip; we'll create a venv using python3 -m venv
+  sudo $PKG_MANAGER install -y git python3 python3-devel python3-pip gcc gcc-c++ make cmake openssl-devel bzip2-devel libffi-devel || true
 fi
 
 cd "$REPO_ROOT"
 
 echo "Creating virtual environment (venv) if missing..."
 if [ ! -d "venv" ]; then
-  python3 -m venv venv
+  if python3 -m venv venv 2>/dev/null; then
+    echo "Created venv with python3 -m venv"
+  else
+    echo "python3 -m venv not available or failed — falling back to virtualenv (installed via pip)"
+    # Ensure pip is available and install virtualenv for the user if needed
+    if ! python3 -m pip --version >/dev/null 2>&1; then
+      echo "pip for python3 not found — attempting to install python3-pip via package manager"
+      sudo $PKG_MANAGER install -y python3-pip || true
+    fi
+    python3 -m pip install --user virtualenv
+    # ensure ~/.local/bin is on PATH for this session so we can run virtualenv
+    export PATH="$PATH:$HOME/.local/bin"
+    python3 -m virtualenv venv
+  fi
 fi
 
 echo "Activating virtual environment..."
+# shellcheck disable=SC1090
 source venv/bin/activate
 
 echo "Upgrading pip/setuptools/wheel..."
