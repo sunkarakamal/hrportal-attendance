@@ -1,0 +1,22 @@
+ 
+       * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body { background: linear-gradient(135deg, #87ceeb, #f0f8ff);; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 400px; padding: 20px; }
+        .form-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); text-align: center; }
+        .form-box img { max-width: 100px; margin-bottom: 20px; }
+        h2 { font-size: 24px; margin-bottom: 20px; color: #333; }
+        .flash-messages p { padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 14px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        .btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        .btn:hover { background: #0056b3; }
+        .redirect { margin-top: 15px; color: #666; }
+        .redirect a { color: #007bff; text-decoration: none; }
+        .redirect a:hover { text-decoration: underline; }
+        #imagePreview { width: 100%; max-height: 200px; margin-top: 10px; border-radius: 5px; display: none; }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .form-box { padding: 20px; }
+        }

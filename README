@@ -1,0 +1,251 @@
+# Attendance Management System Documentation
+
+## Introduction
+
+This documentation provides a comprehensive overview of the Attendance Management System, a web-based application designed to track employee attendance using face recognition, GPS location, daily status reports, and administrative features like user management, rota scheduling, notifications, and data exports. The system supports both employee (user) and admin roles.
+
+The application is built with Flask as the backend framework and uses MySQL for data storage. It includes features for secure login/logout, password recovery, attendance tracking, and reporting. Employees can log in/out using facial recognition and submit daily updates, while admins can manage users, upload rotas, send notifications, and export attendance data.
+
+Key Features:
+- **Face Recognition Attendance**: Uses camera for login/logout verification.
+- **GPS Location Tracking**: Records location during login/logout.
+- **Daily Status Reports**: Employees submit reports before logout.
+- **Admin Dashboard**: Manage users, attendance, rotas, and notifications.
+- **Notifications**: Admins send system-wide messages; users receive alerts.
+- **Rota Management**: Upload and view weekly schedules.
+- **Exports**: Generate Excel reports of attendance.
+- **Security**: Hashed passwords, OTP-based password reset.
+
+The system is designed for organizations needing secure, automated attendance tracking. It assumes a local/development setup but can be deployed to production with adjustments (e.g., secure keys, hosting).
+
+## Tech Stack
+
+### Backend
+- **Python 3.12+**: Core language for the application.
+- **Flask**: Web framework for routing, templates, and sessions.
+- **MySQL**: Database for storing users, attendance, rotas, notifications, and updates.
+- **mysql-connector-python**: Python driver for MySQL interactions.
+- **Werkzeug**: For password hashing and security utilities.
+- **face_recognition & dlib**: For facial recognition during login/logout.
+- **numpy & pillow**: For image processing and handling.
+- **geocoder**: For capturing GPS location via IP.
+- **pandas & openpyxl**: For generating and exporting Excel reports.
+- **smtplib**: For sending OTP emails during password reset.
+- **dotenv**: For loading environment variables (e.g., DB credentials, SMTP settings).
+
+### Frontend
+- **HTML5/CSS3/JavaScript**: Core web technologies for UI.
+- **Bootstrap 5**: For responsive design and components (e.g., cards, tables, modals).
+- **Font Awesome**: For icons.
+- **Custom JS**: Handles camera access, form submissions, and dynamic UI (e.g., editing profiles, capturing photos).
+
+### Other Tools
+- **OpenCV (cv2)**: Implicitly used via face_recognition for image capture/processing.
+- **Requirements.txt**: Lists all Python dependencies for easy installation via `pip install -r requirements.txt`.
+
+### Deployment Considerations
+- **Environment**: Local development (runs on `http://0.0.0.0:8000`).
+- **Security**: Uses session-based authentication; store secrets in `.env` file.
+- **Browser Compatibility**: Modern browsers with camera access (Chrome, Firefox recommended).
+
+## Installation and Setup
+
+### Prerequisites
+- Python 3.12+ installed.
+- MySQL server running (e.g., via XAMPP or standalone).
+- Webcam for face recognition.
+- SMTP server (e.g., Gmail) for password reset emails.
+
+### Steps
+1. **Clone the Repository**:
+   ```
+   git clone <repository-url>
+   cd <project-directory>
+   ```
+
+2. **Install Dependencies**:
+   ```
+   pip install -r requirements.txt
+   ```
+   - Note: `face_recognition` and `dlib` may require additional setup (e.g., CMake for dlib on Windows/Mac).
+
+3. **Set Up Environment Variables**:
+   Create a `.env` file in the root directory with:
+   ```
+   FLASK_SECRET_KEY=your_secret_key
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=your_db_password
+   DB_NAME=gps_face_db
+   DB_PORT=3306
+   SMTP_SENDER=your_email@gmail.com
+   SMTP_PASSWORD=your_app_password
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=587
+   ```
+   - Generate `FLASK_SECRET_KEY` securely (e.g., via `os.urandom(24)`).
+   - For Gmail SMTP, enable "App Passwords" in Google Account settings.
+
+4. **Database Initialization**:
+   - Start MySQL server.
+   - Run the app once: `python app.py` (it auto-initializes the schema via `init_db()`).
+
+5. **Run the Application**:
+   ```
+   python app.py
+   ```
+   - Access at `http://localhost:8000`.
+   - Register as a user (capture face image during registration).
+   - For admin access, manually set `is_admin=1` in the `users` table for a user.
+
+6. **Uploads Directory**:
+   - Created automatically at `./static/Uploads` for photos.
+
+### Common Issues
+- **Camera Access**: Ensure browser permissions; test on HTTPS for production.
+- **Face Recognition Errors**: Requires good lighting; install dlib properly.
+- **SMTP Errors**: Verify app password and less secure apps (if using Gmail).
+- **Database Connection**: Check `.env` credentials match MySQL setup.
+
+## Database Schema
+
+The app uses MySQL with the following tables (auto-created by `init_db()`):
+
+1. **users**:
+   - `id` (INT, PK, AI): User ID.
+   - `username` (VARCHAR(50), UNIQUE): Username.
+   - `email` (VARCHAR(100), UNIQUE): Email.
+   - `password` (VARCHAR(255)): Hashed password.
+   - `face_image` (LONGBLOB): Binary face image for recognition.
+   - `position` (VARCHAR(100)): Job position (default: 'Employee').
+   - `is_admin` (BOOLEAN): Admin flag (default: 0).
+   - `created_at` (TIMESTAMP): Registration time.
+
+2. **attendance**:
+   - `id` (INT, PK, AI): Attendance ID.
+   - `user_id` (INT, FK to users.id): User reference.
+   - `login_time` (DATETIME): Login timestamp.
+   - `logout_time` (DATETIME): Logout timestamp.
+   - `login_photo_path` (VARCHAR(255)): Path to login photo.
+   - `logout_photo_path` (VARCHAR(255)): Path to logout photo.
+   - `login_latitude` (FLOAT): Login GPS latitude.
+   - `login_longitude` (FLOAT): Login GPS longitude.
+   - `logout_latitude` (FLOAT): Logout GPS latitude.
+   - `logout_longitude` (FLOAT): Logout GPS longitude.
+   - `daily_status_submitted` (TINYINT): Status submission flag (default: 0).
+   - `admin_verified` (TINYINT): Admin verification flag (default: 0).
+   - `attendance_status` (ENUM('Present', 'Absent')): Status (default: 'Absent').
+
+3. **rota**:
+   - `id` (INT, PK, AI): Rota ID.
+   - `rota_image` (LONGBLOB): Binary rota image.
+   - `uploaded_at` (TIMESTAMP): Upload time.
+
+4. **notifications**:
+   - `id` (INT, PK, AI): Notification ID.
+   - `message` (TEXT): Notification text.
+   - `created_at` (TIMESTAMP): Sent time.
+   - `user_id` (INT, FK to users.id): Recipient user.
+   - `is_read` (BOOLEAN): Read flag (default: 0).
+   - `read_at` (TIMESTAMP): Read time.
+
+5. **daily_updates**:
+   - `id` (INT, PK, AI): Update ID.
+   - `user_id` (INT, FK to users.id): User reference.
+   - `update_message` (TEXT): Daily report.
+   - `submitted_at` (TIMESTAMP): Submission time.
+   - `verification_status` (ENUM('pending', 'approved', 'rejected')): Status (default: 'pending').
+
+## Application Structure
+
+### Routes and Functionality
+
+#### Public Routes
+- `/` (GET): Redirects to login.
+- `/login` (GET/POST): Handles user login (email/password, face optional). Supports admin/employee modes.
+- `/register` (GET/POST): User registration with username, email, password, and face image.
+- `/forgot_password` (GET/POST): Sends OTP to email for reset.
+- `/verify_otp` (POST): Verifies OTP.
+- `/reset_password` (GET/POST): Resets password after OTP verification.
+
+#### User Routes (Requires Login, Non-Admin)
+- `/dashboard` (GET): User dashboard showing attendance, last login/logout, calendar, rota, etc.
+- `/login_photo` (POST): Captures login photo, verifies face, records GPS/time.
+- `/submit_daily_status` (POST): Submits daily report before logout.
+- `/logout_photo` (POST): Captures logout photo, verifies face, records GPS/time.
+- `/update_profile` (POST): Updates user email, position, face image.
+- `/check_notifications` (GET): Polls for unread notifications.
+
+#### Admin Routes (Requires Login, is_admin=1)
+- `/admin` (GET): Admin dashboard with attendance overview, user management, rota upload, notifications.
+- `/admin_update_user/<user_id>` (POST): Updates user details (username, email, position, face).
+- `/upload_rota` (POST): Uploads weekly rota image.
+- `/send_notification` (POST): Sends message to all non-admins.
+- `/update_attendance_status/<attendance_id>` (POST): Marks attendance as Present/Absent.
+- `/view_excel` (GET): Views attendance in table format.
+- `/export` (GET): Downloads attendance as Excel file.
+
+#### Shared Routes
+- `/logout` (GET): Clears session and logs out.
+
+### Key Logic
+- **Face Recognition**: Uses `face_recognition` to compare captured photo with stored user face encoding.
+- **GPS**: Uses `geocoder.ip('me')` for location (IP-based; not precise, for demo).
+- **Sessions**: Stores user_id, username, is_admin for authentication.
+- **Emails**: SMTP for OTPs (configurable via .env).
+- **Exports**: Pandas generates Excel from attendance data.
+- **Logging**: Basic logging for debugging.
+
+### Templates
+- **login.html**: Login form.
+- **register.html**: Registration form with face upload.
+- **forgot_password.html**: Email input for OTP.
+- **reset_password.html**: New password form.
+- **dashboard.html**: User UI with sections (attendance, rota, etc.).
+- **admin.html**: Admin UI with management tools.
+- **view_excel.html**: Attendance table view.
+- **export.html**: Export button page.
+
+### Static Files
+- **CSS/JS**: dashboard.css/js, admin.css/js for UI interactions (e.g., camera, edits).
+- **Uploads**: Stores photos (login/logout).
+
+## User Guide
+
+### For Employees (Users)
+1. **Register**: Visit `/register`, provide details and face photo.
+2. **Login**: Use email/password at `/login`.
+3. **Dashboard**:
+   - Capture login photo (face verification required).
+   - Submit daily status before logout.
+   - Capture logout photo.
+   - View 30-day calendar, rota, notifications, policies.
+4. **Profile**: Edit email/position/face.
+5. **Logout**: Clears session.
+
+### For Admins
+1. **Login**: Use `/login` with admin credentials.
+2. **Dashboard**:
+   - View/manage attendance (daily/weekly/monthly/yearly).
+   - Manage users (edit details).
+   - Upload rota images.
+   - Send notifications.
+   - View read notifications report.
+   - Export attendance to Excel.
+3. **Search**: Filter users/attendance by username.
+
+### Password Recovery
+- Forgot password: Enter email for OTP.
+- Verify OTP and reset password.
+
+## Troubleshooting
+- **DB Connection Failed**: Check MySQL running and .env credentials.
+- **Face Recognition Issues**: Ensure dlib installed; good lighting/camera.
+- **Email Errors**: Verify SMTP settings; check spam/junk for OTPs.
+- **Camera Not Working**: Browser permissions; use HTTPS in production.
+- **Exports Fail**: Ensure pandas/openpyxl installed.
+- **Logs**: Check console for errors (logging set to INFO).
+
+For further issues, refer to Flask/MySQL docs or contact the developer.
+
+This documentation is comprehensive for sharing with others. Update as code evolves.

@@ -1,853 +1,304 @@
+<!-- templates/admin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Attendance System</title>
+    <title>Admin Dashboard - HRMS Attendance System</title>
+    <link rel="icon" href="{{ url_for('static', filename='uploads/logo.jpeg') }}" type="image/png">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
-        }
-        body {
-            background: #eef2f7;
-            min-height: 100vh;
-            color: #333;
-            overflow-x: hidden;
-        }
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-            width: 100%;
-        }
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, #1e3a8a, #3b82f6);
-            color: #fff;
-            padding: 20px;
-            position: fixed;
-            height: 100%;
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .sidebar.collapsed {
-            transform: translateX(-280px);
-        }
-        .sidebar-header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .sidebar-header h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-        .profile-section {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .profile-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin: 0 auto 10px;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-        .profile-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .profile-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 15px;
-        }
-        .profile-info p {
-            font-size: 0.9rem;
-            margin: 8px 0;
-            color: #fff;
-        }
-        .profile-info input {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            border: none;
-            border-radius: 4px;
-            display: none;
-            font-size: 0.9rem;
-        }
-        .profile-info input.active {
-            display: block;
-        }
-        .profile-info button {
-            background: #10b981;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s;
-        }
-        .profile-info button:hover {
-            background: #059669;
-        }
-        #edit-profile-btn {
-            background: #f59e0b;
-        }
-        #edit-profile-btn:hover {
-            background: #d97706;
-        }
-        #save-profile-btn {
-            display: none;
-        }
-        .sidebar-nav {
-            list-style: none;
-            margin-top: 20px;
-        }
-        .sidebar-nav li {
-            margin: 10px 0;
-        }
-        .sidebar-nav li a {
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-        .sidebar-nav li a i {
-            margin-right: 12px;
-            font-size: 1.1rem;
-        }
-        .sidebar-nav li a:hover,
-        .sidebar-nav li.active a {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 30px;
-            background: #fff;
-            transition: margin-left 0.3s ease;
-        }
-        .main-content.expanded {
-            margin-left: 0;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e3a8a;
-        }
-        .menu-toggle {
-            display: none;
-            font-size: 1.8rem;
-            color: #1e3a8a;
-            cursor: pointer;
-            padding: 10px;
-        }
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        .flash-messages p {
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-        .success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .search-bar {
-            margin-bottom: 30px;
-        }
-        .search-bar form {
-            display: flex;
-            gap: 10px;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .search-bar input:focus {
-            border-color: #3b82f6;
-        }
-        .search-bar button {
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .search-bar button:hover {
-            background: #1e3a8a;
-        }
-        .card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        .card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #1e3a8a;
-        }
-        .card h4 {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            color: #374151;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-        }
-        th, td {
-            padding: 14px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        th {
-            background: #3b82f6;
-            color: #fff;
-            font-weight: 500;
-        }
-        tr:hover {
-            background: #f9fafb;
-        }
-        img {
-            max-width: 80px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .hours-red {
-            color: #ef4444;
-            font-weight: 500;
-        }
-        .hours-green {
-            color: #10b981;
-            font-weight: 500;
-        }
-        .edit-user-btn, .save-user-btn, .approve-btn, .reject-btn {
-            background: #f59e0b;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin: 0 5px;
-        }
-        .edit-user-btn:hover, .save-user-btn:hover {
-            background: #d97706;
-        }
-        .approve-btn {
-            background: #10b981;
-        }
-        .approve-btn:hover {
-            background: #059669;
-        }
-        .reject-btn {
-            background: #ef4444;
-        }
-        .reject-btn:hover {
-            background: #dc2626;
-        }
-        .save-user-btn {
-            display: none;
-        }
-        .rota-upload {
-            margin-top: 20px;
-        }
-        .rota-upload input[type="file"] {
-            display: block;
-            margin-bottom: 10px;
-        }
-        .attendance-view-links a {
-            text-decoration: none;
-            color: #333;
-        }
-        .attendance-view-links a:hover {
-            color: #3b82f6;
-        }
-        .notification-form {
-            margin-top: 20px;
-        }
-        .notification-form textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            resize: vertical;
-        }
-        .notification-form button {
-            background: #10b981;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .notification-form button:hover {
-            background: #059669;
-        }
-        @media (max-width: 1024px) {
-            .sidebar { width: 240px; }
-            .main-content { margin-left: 240px; }
-            .sidebar.collapsed { transform: translateX(-240px); }
-        }
-        @media (max-width: 768px) {
-            .sidebar { width: 280px; transform: translateX(-280px); position: fixed; z-index: 1000; }
-            .sidebar.collapsed { transform: translateX(-280px); }
-            .sidebar:not(.collapsed) { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .main-content.expanded { margin-left: 0; }
-            .menu-toggle { display: block; }
-            .header h1 { font-size: 1.5rem; }
-            table { font-size: 0.85rem; }
-            img { max-width: 60px; }
-        }
-        @media (max-width: 480px) {
-            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .search-bar form { flex-direction: column; }
-            .search-bar button { width: 100%; }
-            .card { padding: 15px; }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body>
-    <div class="admin-wrapper">
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <h2>Admin Dashboard</h2>
+    <div class="container-fluid">
+        <!-- Sidebar -->
+        <nav class="sidebar-pc" id="sidebar" data-bs-backdrop="false">
+            <div class="offcanvas-header">
+                <h2 class="offcanvas-title" id="sidebarLabel">Admin Dashboard</h2>
+                <button type="button" class="btn-close btn-close-white d-none" data-bs-dismiss="offcanvas" aria-label="Close" id="close-btn"></button>
             </div>
-            <div class="profile-section">
-                {% if admin_profile.face_image_base64 %}
-                <div class="profile-circle">
-                    <img id="profile-pic" src="data:image/jpeg;base64,{{ admin_profile.face_image_base64 }}" alt="Admin Profile">
+            <div class="offcanvas-body">
+                <div class="profile-section">
+                    {% if admin_profile and admin_profile.face_image_base64 %}
+                    <div class="profile-circle">
+                        <img id="admin-profile-pic" src="data:image/jpeg;base64,{{ admin_profile.face_image_base64 }}" alt="Admin Profile">
+                    </div>
+                    {% else %}
+                    <div class="profile-circle">
+                        <img id="admin-profile-pic" src="{{ url_for('static', filename='default_profile.jpg') }}" alt="Admin Profile">
+                    </div>
+                    {% endif %}
+                    <div class="profile-info">
+                        <p><strong>Admin:</strong> {{ admin_profile.username if admin_profile else 'Admin' }}</p>
+                        <p><strong>Email:</strong> <span id="admin-email-display">{{ admin_profile.email if admin_profile else 'admin@example.com' }}</span></p>
+                        <input type="email" id="admin-email" value="{{ admin_profile.email if admin_profile else '' }}" placeholder="Email" style="display: none;">
+                        <input type="file" id="admin-new-face-image" accept="image/*" style="display: none;">
+                        <button id="admin-edit-profile-btn">Edit Profile</button>
+                        <button id="admin-save-profile-btn" style="display: none;">Save Changes</button>
+                    </div>
                 </div>
-                {% else %}
-                <div class="profile-circle">
-                    <img id="profile-pic" src="{{ url_for('static', filename='default_profile.jpg') }}" alt="Admin Profile">
-                </div>
-                {% endif %}
-                <div class="profile-info">
-                    <p><strong>Name:</strong> <span id="username-display">{{ admin_profile.username }}</span></p>
-                    <input type="text" id="username" value="{{ admin_profile.username }}" placeholder="Username">
-                    <p><strong>Email:</strong> <span id="email-display">{{ admin_profile.email }}</span></p>
-                    <input type="email" id="email" value="{{ admin_profile.email }}" placeholder="Email">
-                    <p><strong>Position:</strong> {{ admin_profile.position }}</p>
-                    <input type="text" id="position" value="{{ admin_profile.position }}" placeholder="Position">
-                    <input type="file" id="new-face-image" accept="image/*" style="display: none;">
-                    <button id="edit-profile-btn">Edit Profile</button>
-                    <button id="save-profile-btn">Save Changes</button>
-                </div>
+                <ul class="sidebar-nav">
+                    <li class="active" data-section="attendance"><a href="#" class="active"><i class="fas fa-clock"></i> <span class="sidebar-text">Attendance</span></a></li>
+                    <li data-section="users"><a href="#"><i class="fas fa-users"></i> <span class="sidebar-text">Manage Users</span></a></li>
+                    <li data-section="rota"><a href="#"><i class="fas fa-calendar-week"></i> <span class="sidebar-text">Upload Rota</span></a></li>
+                    <li><a href="/register"><i class="fas fa-user"></i>New User</a></li>
+                    <li data-section="notifications"><a href="#"><i class="fas fa-bell"></i> <span class="sidebar-text">Notifications</span></a></li>
+                    <li data-section="export"><a href="{{ url_for('export_page') }}"><i class="fas fa-file-export"></i> <span class="sidebar-text">Export Data</span></a></li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span></a></li>
+                </ul>
             </div>
-            <ul class="sidebar-nav">
-                <li data-section="dashboard" class="active"><a><i class="fas fa-home"></i> Dashboard</a></li>
-                <li data-section="users"><a><i class="fas fa-users"></i> Manage Users</a></li>
-                <li data-section="attendance"><a><i class="fas fa-clock"></i> Attendance Records</a></li>
-                <li data-section="weekly-rota"><a><i class="fas fa-calendar-week"></i> Weekly Rota</a></li>
-                <li data-section="Register"><a href="{{ url_for('register') }}"><i class="fas fa-user"></i> New User</a></li>                                
-                <li data-section="notifications"><a><i class="fas fa-bell"></i> Send Notification</a></li>
-                <li data-section="read-notifications"><a><i class="fas fa-envelope-open"></i> Read Notifications</a></li>
-                <li><a href="{{ url_for('view_excel') }}"><i class="fas fa-table"></i> View Excel</a></li>
-                <li><a href="{{ url_for('export') }}"><i class="fas fa-download"></i> Export Data</a></li>
-                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            </ul>
         </nav>
         <main class="main-content">
             <div class="header">
-                <h1>Admin Dashboard</h1>
-                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+                <h1>Admin Panel</h1>
+                <button class="toggle-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
             </div>
             <div class="flash-messages">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <p class="{{ category }}">{{ message }}</p>
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
             </div>
 
-            <section class="content-section active" id="dashboard">
+            <!-- Attendance Section -->
+            <section class="content-section active" id="attendance">
                 <div class="card">
-                    <h3>Attendance Overview</h3>
-                    <div class="search-bar">
-                        <form method="GET">
-                            <input type="text" name="search" placeholder="Search by username" value="{{ search_query }}">
-                            <button type="submit">Search</button>
-                        </form>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Attendance Overview</h3>
+                        <div class="view-selector">
+                            <select id="view-select" class="form-select">
+                                <option value="daily" {% if view == 'daily' %}selected{% endif %}>Daily</option>
+                                <option value="weekly" {% if view == 'weekly' %}selected{% endif %}>Weekly</option>
+                                <option value="monthly" {% if view == 'monthly' %}selected{% endif %}>Monthly</option>
+                                <option value="yearly" {% if view == 'yearly' %}selected{% endif %}>Yearly</option>
+                            </select>
+                        </div>
                     </div>
-                    <p><strong>View:</strong>
-                        <span class="attendance-view-links">
-                            <a href="{{ url_for('admin', view='daily') }}" {% if view == 'daily' %}style="font-weight: bold;"{% endif %}>Daily</a> |
-                            <a href="{{ url_for('admin', view='weekly') }}" {% if view == 'weekly' %}style="font-weight: bold;"{% endif %}>Weekly</a> |
-                            <a href="{{ url_for('admin', view='monthly') }}" {% if view == 'monthly' %}style="font-weight: bold;"{% endif %}>Monthly</a> |
-                            <a href="{{ url_for('admin', view='yearly') }}" {% if view == 'yearly' %}style="font-weight: bold;"{% endif %}>Yearly</a>
-                        </span>
-                    </p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Position</th>
-                                <th>Login Time</th>
-                                <th>Login Location</th>
-                                <th>Logout Time</th>
-                                <th>Logout Location</th>
-                                <th>Hours Worked</th>
-                                <th>Daily Status</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if data %}
-                                {% for record in data %}
+                    <div class="card-body">
+                        <div class="search-bar mb-3">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by username..." value="{{ search_query }}">
+                            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Position</th>
+                                        <th>Login Time</th>
+                                        <th>Logout Time</th>
+                                        <th>Hours Worked</th>
+                                        <th>Status</th>
+                                        <th>Daily Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in data %}
                                     <tr>
                                         <td>{{ record.username }}</td>
                                         <td>{{ record.position }}</td>
                                         <td>{{ record.login_time|strftime('%Y-%m-%d %H:%M:%S') if record.login_time else 'N/A' }}</td>
-                                        <td>
-                                            {% if record.login_latitude is not none and record.login_longitude is not none %}
-                                                {{ record.login_latitude|round(4) }}, {{ record.login_longitude|round(4) }}
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
-                                        </td>
                                         <td>{{ record.logout_time|strftime('%Y-%m-%d %H:%M:%S') if record.logout_time else 'N/A' }}</td>
+                                        <td><span class="hours-worked" style="color: {{ record.color }};">{{ record.hours_worked }}</span></td>
                                         <td>
-                                            {% if record.logout_latitude is not none and record.logout_longitude is not none %}
-                                                {{ record.logout_latitude|round(4) }}, {{ record.logout_longitude|round(4) }}
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
+                                            <span class="badge bg-{{ 'success' if record.attendance_status == 'Present' else 'danger' }}">{{ record.attendance_status }}</span>
                                         </td>
-                                        <td class="hours-{{ record.color }}">{{ record.hours_worked }}</td>
-                                        <td>{{ record.daily_status or 'N/A' }}</td>
-                                        <td>{{ record.status }}</td>
+                                        <td>{{ 'Yes' if record.daily_status_submitted else 'No' }}</td>
                                         <td>
-                                            <button class="approve-btn" data-attendance-id="{{ record.attendance_id }}">Approve</button>
-                                            <button class="reject-btn" data-attendance-id="{{ record.attendance_id }}">Reject</button>
+                                            <select class="status-select form-select form-select-sm" data-id="{{ record.attendance_id }}">
+                                                <option value="Present" {% if record.attendance_status == 'Present' %}selected{% endif %}>Present</option>
+                                                <option value="Absent" {% if record.attendance_status == 'Absent' %}selected{% endif %}>Absent</option>
+                                            </select>
                                         </td>
                                     </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr><td colspan="10">No records found.</td></tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="all-attendance-section" style="display: none;">
+                            <h5>All Attendance Records</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Login Time</th>
+                                            <th>Logout Time</th>
+                                            <th>Hours Worked</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in all_attendance %}
+                                        <tr>
+                                            <td>{{ record.username }}</td>
+                                            <td>{{ record.login_time|strftime('%Y-%m-%d %H:%M:%S') if record.login_time else 'N/A' }}</td>
+                                            <td>{{ record.logout_time|strftime('%Y-%m-%d %H:%M:%S') if record.logout_time else 'N/A' }}</td>
+                                            <td><span class="hours-worked" style="color: {{ record.color }};">{{ record.hours_worked }}</span></td>
+                                            <td><span class="badge bg-{{ 'success' if record.attendance_status == 'Present' else 'danger' }}">{{ record.attendance_status }}</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
+            <!-- Manage Users Section -->
             <section class="content-section" id="users">
                 <div class="card">
-                    <h3>Manage Users</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Position</th>
-                                <th>Face Image</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                                <tr id="user-{{ user.id }}">
-                                    <td>{{ user.id }}</td>
-                                    <td><span class="username-display">{{ user.username }}</span><input type="text" class="username-input" value="{{ user.username }}" style="display: none;"></td>
-                                    <td><span class="email-display">{{ user.email }}</span><input type="email" class="email-input" value="{{ user.email }}" style="display: none;"></td>
-                                    <td><span class="position-display">{{ user.position }}</span><input type="text" class="position-input" value="{{ user.position }}" style="display: none;"></td>
-                                    <td>
-                                        {% if user.face_image_base64 %}
-                                            <img src="data:image/jpeg;base64,{{ user.face_image_base64 }}" alt="User Image" class="user-pic">
-                                            <input type="file" class="face-image-input" accept="image/*" style="display: none;">
-                                        {% else %}
-                                            N/A
-                                            <input type="file" class="face-image-input" accept="image/*" style="display: none;">
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button class="edit-user-btn" data-user-id="{{ user.id }}">Edit</button>
-                                        <button class="save-user-btn" data-user-id="{{ user.id }}" style="display: none;">Save</button>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="content-section" id="attendance">
-                <div class="card">
-                    <h3>All Attendance Records</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Position</th>
-                                <th>Login Time</th>
-                                <th>Login Location</th>
-                                <th>Logout Time</th>
-                                <th>Logout Location</th>
-                                <th>Hours Worked</th>
-                                <th>Daily Status</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if all_attendance %}
-                                {% for record in all_attendance %}
+                    <h3 class="card-header">Manage Users</h3>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="users-table">
+                                <thead>
                                     <tr>
-                                        <td>{{ record.username }}</td>
-                                        <td>{{ record.position }}</td>
-                                        <td>{{ record.login_time|strftime('%Y-%m-%d %H:%M:%S') if record.login_time else 'N/A' }}</td>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Position</th>
+                                        <th>Profile Image</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr data-user-id="{{ user.id }}">
+                                        <td>{{ user.id }}</td>
+                                        <td contenteditable="false">{{ user.username }}</td>
+                                        <td contenteditable="false">{{ user.email }}</td>
+                                        <td contenteditable="false">{{ user.position }}</td>
                                         <td>
-                                            {% if record.login_latitude is not none and record.login_longitude is not none %}
-                                                {{ record.login_latitude|round(4) }}, {{ record.login_longitude|round(4) }}
+                                            {% if user.face_image_base64 %}
+                                            <img src="data:image/jpeg;base64,{{ user.face_image_base64 }}" alt="Profile" class="user-profile-img" style="width: 50px; height: 50px; border-radius: 50%;">
                                             {% else %}
-                                                N/A
+                                            <span>No Image</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ record.logout_time|strftime('%Y-%m-%d %H:%M:%S') if record.logout_time else 'N/A' }}</td>
                                         <td>
-                                            {% if record.logout_latitude is not none and record.logout_longitude is not none %}
-                                                {{ record.logout_latitude|round(4) }}, {{ record.logout_longitude|round(4) }}
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
-                                        </td>
-                                        <td class="hours-{{ record.color }}">{{ record.hours_worked }}</td>
-                                        <td>{{ record.daily_status or 'N/A' }}</td>
-                                        <td>{{ record.status }}</td>
-                                        <td>
-                                            <button class="approve-btn" data-attendance-id="{{ record.attendance_id }}">Approve</button>
-                                            <button class="reject-btn" data-attendance-id="{{ record.attendance_id }}">Reject</button>
+                                            <button class="btn btn-sm btn-primary edit-user-btn" data-id="{{ user.id }}">Edit</button>
+                                            <input type="file" class="new-user-image" accept="image/*" style="display: none;" data-id="{{ user.id }}">
                                         </td>
                                     </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="10">No records found.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="content-section" id="weekly-rota">
-                <div class="card">
-                    <h3>Weekly Rota</h3>
-                    <div class="rota-upload">
-                        <input type="file" id="rota-image" accept="image/*">
-                        <button id="upload-rota-btn" class="btn">Upload Rota</button>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    {% if rota_image_base64 %}
-                        <p><strong>Current Weekly Rota:</strong></p>
-                        <img src="data:image/jpeg;base64,{{ rota_image_base64 }}" alt="Weekly Rota" class="rota-image">
-                    {% else %}
-                        <p>No weekly rota uploaded yet.</p>
-                    {% endif %}
                 </div>
             </section>
 
+            <!-- Upload Rota Section -->
+            <section class="content-section" id="rota">
+                <div class="card">
+                    <h3 class="card-header">Upload Weekly Rota</h3>
+                    <div class="card-body">
+                        <form id="upload-rota-form">
+                            <input type="file" id="rota-image" accept="image/*" class="form-control mb-3" required>
+                            <button type="submit" class="btn btn-primary">Upload Rota</button>
+                        </form>
+                        {% if rota_image_base64 %}
+                        <div class="mt-3">
+                            <h5>Current Rota</h5>
+                            <img src="data:image/jpeg;base64,{{ rota_image_base64 }}" alt="Current Rota" class="rota-image">
+                        </div>
+                        {% else %}
+                        <p class="mt-3">No rota uploaded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notifications Section -->
             <section class="content-section" id="notifications">
                 <div class="card">
-                    <h3>Send Notification to All Users</h3>
-                    <div class="notification-form">
-                        <textarea id="notification-message" placeholder="Enter your message here" rows="4"></textarea>
-                        <button id="send-notification-btn">Send Notification</button>
+                    <h3 class="card-header">Send Notification</h3>
+                    <div class="card-body">
+                        <form id="send-notification-form">
+                            <textarea id="notification-message" class="form-control mb-3" placeholder="Enter notification message..." required></textarea>
+                            <button type="submit" class="btn btn-primary">Send to All Users</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card mt-4">
+                    <h3 class="card-header">Read Notifications</h3>
+                    <div class="card-body">
+                        {% if read_notifications %}
+                        <ul class="list-group">
+                            {% for notif in read_notifications %}
+                            <li class="list-group-item">{{ notif.message }} - Sent to {{ notif.username }} on {{ notif.created_at|strftime('%Y-%m-%d %H:%M:%S') }} (Read: {{ notif.read_at|strftime('%Y-%m-%d %H:%M:%S') if notif.read_at else 'N/A' }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p>No read notifications.</p>
+                        {% endif %}
                     </div>
                 </div>
             </section>
 
-            <section class="content-section" id="read-notifications">
+            <!-- Export Section (Redirects to separate page) -->
+            <section class="content-section" id="export">
                 <div class="card">
-                    <h3>Read Notifications Report</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Message</th>
-                                <th>Sent At</th>
-                                <th>Read At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if read_notifications %}
-                                {% for notif in read_notifications %}
-                                    <tr>
-                                        <td>{{ notif.username }}</td>
-                                        <td>{{ notif.message }}</td>
-                                        <td>{{ notif.created_at|strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                        <td>{{ notif.read_at|strftime('%Y-%m-%d %H:%M:%S') if notif.read_at else 'N/A' }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr><td colspan="4">No notifications read yet.</td></tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+                    <h3>Export Attendance Data</h3>
+                    <p>Redirecting to export page...</p>
                 </div>
             </section>
         </main>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const menuToggle = document.querySelector('.menu-toggle');
-            const navItems = document.querySelectorAll('.sidebar li[data-section]');
-            const sections = document.querySelectorAll('.content-section');
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-user-form">
+                        <input type="hidden" id="edit-user-id">
+                        <div class="mb-3">
+                            <label>Username</label>
+                            <input type="text" id="edit-username" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" id="edit-email" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Position</label>
+                            <input type="text" id="edit-position" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>New Profile Image</label>
+                            <input type="file" id="edit-face-image" class="form-control" accept="image/*">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-user-btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target) && !sidebar.classList.contains('collapsed')) {
-                    sidebar.classList.add('collapsed');
-                    mainContent.classList.remove('expanded');
-                }
-            });
-
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('collapsed');
-                mainContent.classList.remove('expanded');
-            }
-      
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const sectionId = item.getAttribute('data-section');
-                    if (sectionId) {
-                        navItems.forEach(i => i.classList.remove('active'));
-                        item.classList.add('active');
-                        sections.forEach(section => section.classList.remove('active'));
-                        const targetSection = document.getElementById(sectionId);
-                        targetSection.classList.add('active');
-                        
-                        targetSection.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-
-                        if (window.innerWidth <= 768) {
-                            sidebar.classList.add('collapsed');
-                            mainContent.classList.remove('expanded');
-                        }
-                    }
-                });
-            });
-
-            // Admin Profile Edit
-            const editProfileBtn = document.getElementById('edit-profile-btn');
-            const saveProfileBtn = document.getElementById('save-profile-btn');
-            const usernameInput = document.getElementById('username');
-            const emailInput = document.getElementById('email');
-            const positionInput = document.getElementById('position');
-            const newFaceImageInput = document.getElementById('new-face-image');
-            const profilePic = document.getElementById('profile-pic');
-            const usernameDisplay = document.getElementById('username-display');
-            const emailDisplay = document.getElementById('email-display');
-
-            editProfileBtn.addEventListener('click', () => {
-                usernameInput.classList.add('active');
-                emailInput.classList.add('active');
-                positionInput.classList.add('active');
-                newFaceImageInput.style.display = 'block';
-                usernameDisplay.style.display = 'none';
-                emailDisplay.style.display = 'none';
-                editProfileBtn.style.display = 'none';
-                saveProfileBtn.style.display = 'block';
-            });
-
-            newFaceImageInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    profilePic.src = URL.createObjectURL(file);
-                }
-            });
-
-            saveProfileBtn.addEventListener('click', () => {
-                const formData = new FormData();
-                formData.append('username', usernameInput.value);
-                formData.append('email', emailInput.value);
-                formData.append('position', positionInput.value);
-                if (newFaceImageInput.files[0]) {
-                    formData.append('face_image', newFaceImageInput.files[0]);
-                }
-                fetch('/update_profile', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Profile updated successfully!');
-                            usernameDisplay.textContent = usernameInput.value;
-                            emailDisplay.textContent = emailInput.value;
-                            usernameInput.classList.remove('active');
-                            emailInput.classList.remove('active');
-                            positionInput.classList.remove('active');
-                            newFaceImageInput.style.display = 'none';
-                            usernameDisplay.style.display = 'inline';
-                            emailDisplay.style.display = 'inline';
-                            editProfileBtn.style.display = 'block';
-                            saveProfileBtn.style.display = 'none';
-                            location.reload();
-                        } else {
-                            alert(data.message);
-                        }
-                    });
-            });
-
-            // Manage Users Edit
-            document.querySelectorAll('.edit-user-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const userId = btn.getAttribute('data-user-id');
-                    const row = document.getElementById(`user-${userId}`);
-                    row.querySelector('.username-display').style.display = 'none';
-                    row.querySelector('.email-display').style.display = 'none';
-                    row.querySelector('.position-display').style.display = 'none';
-                    row.querySelector('.username-input').style.display = 'block';
-                    row.querySelector('.email-input').style.display = 'block';
-                    row.querySelector('.position-input').style.display = 'block';
-                    row.querySelector('.face-image-input').style.display = 'block';
-                    btn.style.display = 'none';
-                    row.querySelector('.save-user-btn').style.display = 'block';
-                });
-            });
-
-            document.querySelectorAll('.save-user-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const userId = btn.getAttribute('data-user-id');
-                    const row = document.getElementById(`user-${userId}`);
-                    const formData = new FormData();
-                    formData.append('username', row.querySelector('.username-input').value);
-                    formData.append('email', row.querySelector('.email-input').value);
-                    formData.append('position', row.querySelector('.position-input').value);
-                    const faceImageInput = row.querySelector('.face-image-input');
-                    if (faceImageInput.files[0]) {
-                        formData.append('face_image', faceImageInput.files[0]);
-                    }
-                    fetch(`/admin_update_user/${userId}`, { method: 'POST', body: formData })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('User updated successfully!');
-                                row.querySelector('.username-display').textContent = row.querySelector('.username-input').value;
-                                row.querySelector('.email-display').textContent = row.querySelector('.email-input').value;
-                                row.querySelector('.position-display').textContent = row.querySelector('.position-input').value;
-                                if (faceImageInput.files[0]) {row.querySelector('.user-pic').src = URL.createObjectURL(faceImageInput.files[0]);}
-                                row.querySelector('.username-display').style.display = 'block';
-                                row.querySelector('.email-display').style.display = 'block';
-                                row.querySelector('.position-display').style.display = 'block';
-                                row.querySelector('.username-input').style.display = 'none';
-                                row.querySelector('.email-input').style.display = 'none';
-                                row.querySelector('.position-input').style.display = 'none';
-                                row.querySelector('.face-image-input').style.display = 'none';
-                                btn.style.display = 'none';
-                                row.querySelector('.edit-user-btn').style.display = 'block';
-                            } else {
-                                alert(data.message);
-                            }
-                        });
-                });
-            });
-
-            // Rota Upload
-            document.getElementById('upload-rota-btn').addEventListener('click', () => {
-                const fileInput = document.getElementById('rota-image');
-                const formData = new FormData();
-                formData.append('rota_image', fileInput.files[0]);
-                fetch('/upload_rota', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Rota uploaded successfully!');
-                            location.reload();
-                        } else {
-                            alert(data.message);
-                        }
-                    });
-            });
-
-            // Send Notification
-            document.getElementById('send-notification-btn').addEventListener('click', () => {
-                const message = document.getElementById('notification-message').value;
-                fetch('/send_notification', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `message=${encodeURIComponent(message)}`
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Notification sent successfully!');
-                            document.getElementById('notification-message').value = '';
-                        } else {
-                            alert(data.message);
-                        }
-                    });
-            });
-
-            // Approve/Reject Attendance
-            document.querySelectorAll('.approve-btn, .reject-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const attendanceId = btn.getAttribute('data-attendance-id');
-                    const status = btn.classList.contains('approve-btn') ? 'approved' : 'rejected';
-                    fetch(`/update_attendance_status/${attendanceId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `status=${status}`
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('Attendance status updated!');
-                                location.reload();
-                            } else {
-                                alert(data.message);
-                            }
-                        });
-                });
-            });
-        });
-    </script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>
